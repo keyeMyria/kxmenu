@@ -370,6 +370,7 @@ typedef enum {
                 [self.superview removeFromSuperview];
             [self removeFromSuperview];
         }
+		[KxMenu dismissMenu];
     }
 }
 
@@ -800,33 +801,40 @@ static UIFont *gTitleFont;
         [[NSNotificationCenter defaultCenter] removeObserver:self];
     }
 }
+- (void) showMenuInView:(UIView *)view
+			   fromRect:(CGRect)rect
+			  menuItems:(NSArray *)menuItems
+			   delegate:(id<KxMenuDelegate>)delegate
+{
+	NSParameterAssert(view);
+	NSParameterAssert(menuItems.count);
+	
+	if (_menuView) {
+		
+		[_menuView dismissMenu:NO];
+		_menuView = nil;
+	}
+	
+	if (!_observing) {
+		
+		_observing = YES;
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(orientationWillChange:)
+													 name:UIApplicationWillChangeStatusBarOrientationNotification
+												   object:nil];
+	}
+	
+	self.delegate = delegate;
+	_menuView = [[KxMenuView alloc] init];
+	[_menuView showMenuInView:view fromRect:rect menuItems:menuItems];
+}
 
 - (void) showMenuInView:(UIView *)view
                fromRect:(CGRect)rect
               menuItems:(NSArray *)menuItems
 {
-    NSParameterAssert(view);
-    NSParameterAssert(menuItems.count);
-    
-    if (_menuView) {
-        
-        [_menuView dismissMenu:NO];
-        _menuView = nil;
-    }
-
-    if (!_observing) {
-    
-        _observing = YES;
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(orientationWillChange:)
-                                                     name:UIApplicationWillChangeStatusBarOrientationNotification
-                                                   object:nil];
-    }
-
-    
-    _menuView = [[KxMenuView alloc] init];
-    [_menuView showMenuInView:view fromRect:rect menuItems:menuItems];    
+	[self showMenuInView:view fromRect:rect menuItems:menuItems delegate:nil];
 }
 
 - (void) dismissMenu
@@ -842,6 +850,10 @@ static UIFont *gTitleFont;
         _observing = NO;
         [[NSNotificationCenter defaultCenter] removeObserver:self];
     }
+	if (self.delegate && [self.delegate respondsToSelector:@selector(kxMenuDismissed:)]) {
+		[self.delegate kxMenuDismissed:self];
+	}
+	self.delegate = nil;
 }
 
 - (void) orientationWillChange: (NSNotification *) n
@@ -850,10 +862,18 @@ static UIFont *gTitleFont;
 }
 
 + (void) showMenuInView:(UIView *)view
+			   fromRect:(CGRect)rect
+			  menuItems:(NSArray *)menuItems
+			   delegate:(id<KxMenuDelegate>)delegate
+{
+	[[self sharedMenu] showMenuInView:view fromRect:rect menuItems:menuItems delegate:delegate];
+}
+
++ (void) showMenuInView:(UIView *)view
                fromRect:(CGRect)rect
               menuItems:(NSArray *)menuItems
 {
-    [[self sharedMenu] showMenuInView:view fromRect:rect menuItems:menuItems];
+    [KxMenu showMenuInView:view fromRect:rect menuItems:menuItems delegate:nil];
 }
 
 + (void) dismissMenu

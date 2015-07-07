@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "KxMenu.h"
 
-@interface ViewController ()
+@interface ViewController ()<KxMenuDelegate>
 @end
 
 @implementation ViewController {
@@ -151,12 +151,16 @@
     
     [KxMenu showMenuInView:self.view
                   fromRect:sender.frame
-                 menuItems:menuItems];
+                 menuItems:menuItems delegate:self];
 }
 
 - (void) pushMenuItem:(id)sender
 {
     NSLog(@"%@", sender);
+}
+
+-(void)kxMenuDismissed:(KxMenu *)dxMenu {
+	NSLog(@" ==== == ");
 }
 
 @end

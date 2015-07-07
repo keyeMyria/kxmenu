@@ -50,11 +50,20 @@
 
 @end
 
+@protocol KxMenuDelegate;
+
 @interface KxMenu : NSObject
+
+@property (nonatomic,weak) id<KxMenuDelegate> delegate;
 
 + (void) showMenuInView:(UIView *)view
                fromRect:(CGRect)rect
               menuItems:(NSArray *)menuItems;
+
++ (void) showMenuInView:(UIView *)view
+			   fromRect:(CGRect)rect
+			  menuItems:(NSArray *)menuItems
+			   delegate:(id<KxMenuDelegate>)delegate;
 
 + (void) dismissMenu;
 
@@ -63,5 +72,11 @@
 
 + (UIFont *) titleFont;
 + (void) setTitleFont: (UIFont *) titleFont;
+
+@end
+
+@protocol KxMenuDelegate <NSObject>
+@optional
+-(void)kxMenuDismissed:(KxMenu*)dxMenu;
 
 @end
